@@ -69,7 +69,7 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
 def list_cmd(root: pathlib.Path, args: list[str]) -> None:
     files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
     for file in files:
-        if file.suffix == ".md":
+        if file.is_file() and not file.name.startswith(".") and file.suffix:
             print(file.name)
 
 
@@ -84,7 +84,7 @@ COMMAND_MAP = {
     "delete": (delete_cmd, "Delete note(s)"),
     "grep": (grep_cmd, "Search notes by content"),
     "find": (find_cmd, "Search notes by name"),
-    "list": (list_cmd, "List notes (in reverse chronological order)"),
+    "list": (list_cmd, "List files (in reverse chronological order)"),
     "help": (help_cmd, "Print this help message"),
 }
 
