@@ -11,6 +11,7 @@ Oak is a lightweight wrapper around `fd`, `rg`, `fzf`, `bat`, and `nvim`.
 ```bash
 git clone https://github.com/cdkini/oak.git
 cd oak
+chmod +x oak
 sudo cp oak /usr/local/bin # Or wherever you keep your scripts
 ```
 
