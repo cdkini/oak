@@ -18,14 +18,15 @@ DEPENDENCIES = ("fd", "rg", "fzf", "bat", "nvim")
 # Commands =================================================================
 def add_cmd(root: pathlib.Path, args: list[str]) -> None:
     name = args[0] if args else f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+    tags = args[1:] if len(args) > 1 else []
     file_path = root / f"{name}.md"
-    open_note(file_path)
+    open_note(file_path, tags=tags)
 
 
 def daily_cmd(root: pathlib.Path, args: list[str]) -> None:
     today = dt.datetime.now().strftime("%Y-%m-%d")
     file_path = root / f"{today}.md"
-    open_note(file_path)
+    open_note(file_path, tags=["daily"])
 
 
 def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
@@ -63,15 +64,15 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
 
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:
     for cmd, (_, description) in COMMAND_MAP.items():
-        print(f"{cmd:7} - {description}")
+        print(f"{cmd:10} {description}")
 
 
 COMMAND_MAP = {
     "add": (add_cmd, "Add a new note"),
     "daily": (daily_cmd, "Add a new daily note"),
-    "delete": (delete_cmd, "Delete a note"),
-    "grep": (grep_cmd, "Use ripgrep and fzf to search notes"),
-    "find": (find_cmd, "Use fd to search notes"),
+    "delete": (delete_cmd, "Delete note(s)"),
+    "grep": (grep_cmd, "Search notes by content"),
+    "find": (find_cmd, "Search notes by name"),
     "help": (help_cmd, "Print this help message"),
 }
 
@@ -82,12 +83,22 @@ def error(message: str) -> None:
     sys.exit(1)
 
 
-def open_note(path: pathlib.Path) -> None:
+def open_note(path: pathlib.Path, tags: list[str]) -> None:
     if not path.exists():
-        path.touch()
-        path.write_text(f"# {path.stem}\n\n")
+        _init_file(path=path, tags=tags)
 
     subprocess.run(["nvim", path])
+
+
+def _init_file(path: pathlib.Path, tags: list[str]) -> None:
+    frontmatter = f"""---
+title: {path.stem}
+created_at: {dt.datetime.now().strftime("%Y-%m-%d %H:%M")} 
+tags: {", ".join(tags)}
+---"""
+
+    path.touch()
+    path.write_text(f"{frontmatter}\n\n\n")
 
 
 @contextlib.contextmanager
@@ -141,7 +152,7 @@ def fzf_select(query: str, reload_cmd: str, preview_cmd: str) -> list[pathlib.Pa
 
 
 # Input parsing ============================================================
-def init() -> tuple[pathlib.Path, str, list[str]]:
+def init() -> tuple[pathlib.Path, str | None, list[str]]:
     _check_dependencies()
     root = _get_root()
     cmd, args = _parse_cmd_and_args()
@@ -155,18 +166,18 @@ def _get_root() -> pathlib.Path:
 
     root_path = pathlib.Path(root)
     if not root_path.exists():
-        error("Root does not exist!")
+        error(f"Root '{root_path}' does not exist!")
 
     if not root_path.is_dir():
-        error("Root is not a directory!")
+        error(f"Root '{root_path}' is not a directory!")
 
     return root_path
 
 
-def _parse_cmd_and_args() -> tuple[str, list[str]]:
+def _parse_cmd_and_args() -> tuple[str | None, list[str]]:
     args = sys.argv[1:]
     if len(args) == 0:
-        error("No arguments provided")
+        return None, []
 
     return args[0], args[1:]
 
@@ -180,6 +191,8 @@ def _check_dependencies() -> None:
 # Main =====================================================================
 if __name__ == "__main__":
     root, cmd, args = init()
+    if cmd is None:
+        cmd = "help"
     if cmd not in COMMAND_MAP:
         error(f"Command {cmd} not found!")
 
