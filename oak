@@ -136,8 +136,7 @@ def init_file(path: pathlib.Path, tags: list[str], content: str, url: str = "") 
 title: {path.stem}
 created_at: {dt.datetime.now().strftime("%Y-%m-%d %H:%M")} 
 tags: {", ".join(tags)}
-{f"url: {url}" if url else ""}
----"""
+{f"url: {url}" if url else ""}---"""
 
     path.touch()
     path.write_text(f"{frontmatter}\n\n\n{content}")
