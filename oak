@@ -176,7 +176,7 @@ def _get_root() -> pathlib.Path:
     if not root:
         error("Root not set!")
 
-    root_path = pathlib.Path(root)
+    root_path = pathlib.Path(root)  # type: ignore[arg-type] # Guaranteed to be set
     if not root_path.exists():
         error(f"Root '{root_path}' does not exist!")
 
