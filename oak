@@ -13,6 +13,10 @@ import sys
 # Constants ================================================================
 ROOT_ENV_VAR = "OAK_ROOT"
 DEPENDENCIES = ("fd", "rg", "fzf", "bat", "nvim")
+GREEN = "\033[32m"
+RED = "\033[31m"
+BLUE = "\033[34m"
+RESET = "\033[0m"  # Resets color to default
 
 
 # Commands =================================================================
@@ -39,7 +43,7 @@ def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
         )
         for file in files:
             file.unlink()
-            print(f"Deleted: {file.name}")
+            print(f"{BLUE}[DELETED]{RESET} {file.name}")
 
 
 def grep_cmd(root: pathlib.Path, args: list[str]) -> None:
@@ -64,7 +68,7 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
 
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:
     for cmd, (_, description) in COMMAND_MAP.items():
-        print(f"{cmd:10} {description}")
+        print(f"{GREEN}{cmd:10}{RESET} {description}")
 
 
 COMMAND_MAP = {
@@ -79,7 +83,7 @@ COMMAND_MAP = {
 
 # Utils ====================================================================
 def error(message: str) -> None:
-    print(f"Error: {message}")
+    print(f"{RED}[ERROR]{RESET} {message}")
     sys.exit(1)
 
 
@@ -148,11 +152,11 @@ def fzf_select(query: str, reload_cmd: str, preview_cmd: str) -> list[pathlib.Pa
     except subprocess.CalledProcessError:
         error("Something went wrong with FZF!")
 
-    return [pathlib.Path(f) for f in result.decode("utf-8").strip().split()]
+    return [pathlib.Path(f) for f in result.decode("utf-8").strip().splitlines()]
 
 
 # Input parsing ============================================================
-def init() -> tuple[pathlib.Path, str | None, list[str]]:
+def init() -> tuple[pathlib.Path, str, list[str]]:
     _check_dependencies()
     root = _get_root()
     cmd, args = _parse_cmd_and_args()
@@ -174,10 +178,10 @@ def _get_root() -> pathlib.Path:
     return root_path
 
 
-def _parse_cmd_and_args() -> tuple[str | None, list[str]]:
+def _parse_cmd_and_args() -> tuple[str, list[str]]:
     args = sys.argv[1:]
     if len(args) == 0:
-        return None, []
+        return "help", []
 
     return args[0], args[1:]
 
@@ -191,10 +195,8 @@ def _check_dependencies() -> None:
 # Main =====================================================================
 if __name__ == "__main__":
     root, cmd, args = init()
-    if cmd is None:
-        cmd = "help"
     if cmd not in COMMAND_MAP:
-        error(f"Command {cmd} not found!")
+        error(f"Command {cmd} not found! Use `{BLUE}oak help{RESET}` to see available commands.")
 
     fn, _ = COMMAND_MAP[cmd]
     fn(root=root, args=args)
