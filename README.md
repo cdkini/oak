@@ -1,4 +1,4 @@
-# Oak
+# Oak 🌳
 
 A simple CLI utility for developer notetaking. 
 
