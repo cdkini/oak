@@ -66,6 +66,13 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
         )
 
 
+def list_cmd(root: pathlib.Path, args: list[str]) -> None:
+    files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
+    for file in files:
+        if file.suffix == ".md":
+            print(file.name)
+
+
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:
     for cmd, (_, description) in COMMAND_MAP.items():
         print(f"{GREEN}{cmd:10}{RESET} {description}")
@@ -77,6 +84,7 @@ COMMAND_MAP = {
     "delete": (delete_cmd, "Delete note(s)"),
     "grep": (grep_cmd, "Search notes by content"),
     "find": (find_cmd, "Search notes by name"),
+    "list": (list_cmd, "List notes (in reverse chronological order)"),
     "help": (help_cmd, "Print this help message"),
 }
 
@@ -196,7 +204,9 @@ def _check_dependencies() -> None:
 if __name__ == "__main__":
     root, cmd, args = init()
     if cmd not in COMMAND_MAP:
-        error(f"Command {cmd} not found! Use `{BLUE}oak help{RESET}` to see available commands.")
+        error(
+            f"Command {cmd} not found! Use `{BLUE}oak help{RESET}` to see available commands."
+        )
 
     fn, _ = COMMAND_MAP[cmd]
     fn(root=root, args=args)
