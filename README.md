@@ -8,7 +8,14 @@ Oak is a lightweight wrapper around `fd`, `rg`, `fzf`, `bat`, and `nvim`.
 
 
 ### Installation
+```bash
+git clone https://github.com/cdkini/oak.git
+cd oak
+sudo cp oak /usr/local/bin # Or wherever you keep your scripts
+```
 
+You must also set your `OAK_ROOT` env var to point to a notes folder.
+I like using `~/Dropbox` to keep things in sync between my machines.
 
 ### API
 ```
