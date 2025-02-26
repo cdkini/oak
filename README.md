@@ -21,7 +21,7 @@ I like using `~/Dropbox` to keep things in sync between my machines.
 
 ### API
 ```bash
-oak add <NAME?> <TAGS?>     # Add new note
+oak add <NAME> <TAGS?>      # Add new note
 oak daily                   # Open daily note
 oak delete <NAME?>          # Delete note
 oak grep <QUERY?>           # Search notes (by contents)
