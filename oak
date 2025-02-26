@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import contextlib
+import datetime as dt
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+
+
+# Constants ================================================================
+ROOT_ENV_VAR = "OAK_ROOT"
+DEPENDENCIES = ("fd", "rg", "fzf", "bat", "nvim")
+
+
+# Commands =================================================================
+def add_cmd(root: pathlib.Path, args: list[str]) -> None:
+    name = args[0] if args else f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+    file_path = root / f"{name}.md"
+    open_note(file_path)
+
+
+def daily_cmd(root: pathlib.Path, args: list[str]) -> None:
+    today = dt.datetime.now().strftime("%Y-%m-%d")
+    file_path = root / f"{today}.md"
+    open_note(file_path)
+
+
+def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
+    query = args[0] if args else ""
+    with cd(root):
+        files = fzf_select(
+            query=query,
+            reload_cmd="reload:fd -e md --hidden --follow --exclude .git {q}",
+            preview_cmd="bat {} --style=full --color=always",
+        )
+        for file in files:
+            file.unlink()
+            print(f"Deleted: {file.name}")
+
+
+def grep_cmd(root: pathlib.Path, args: list[str]) -> None:
+    query = args[0] if args else ""
+    with cd(root):
+        fzf_open(
+            query=query,
+            reload_cmd="reload:rg --column --color=always --smart-case {q} || :",
+            preview_cmd="bat --style=full --color=always --highlight-line {2} {1}",
+        )
+
+
+def find_cmd(root: pathlib.Path, args: list[str]) -> None:
+    query = args[0] if args else ""
+    with cd(root):
+        fzf_open(
+            query=query,
+            reload_cmd="reload:fd -e md --hidden --follow --exclude .git {q}",
+            preview_cmd="bat {} --style=full --color=always",
+        )
+
+
+def help_cmd(root: pathlib.Path, args: list[str]) -> None:
+    for cmd, (_, description) in COMMAND_MAP.items():
+        print(f"{cmd:7} - {description}")
+
+
+COMMAND_MAP = {
+    "add": (add_cmd, "Add a new note"),
+    "daily": (daily_cmd, "Add a new daily note"),
+    "delete": (delete_cmd, "Delete a note"),
+    "grep": (grep_cmd, "Use ripgrep and fzf to search notes"),
+    "find": (find_cmd, "Use fd to search notes"),
+    "help": (help_cmd, "Print this help message"),
+}
+
+
+# Utils ====================================================================
+def error(message: str) -> None:
+    print(f"Error: {message}")
+    sys.exit(1)
+
+
+def open_note(path: pathlib.Path) -> None:
+    if not path.exists():
+        path.touch()
+        path.write_text(f"# {path.stem}\n\n")
+
+    subprocess.run(["nvim", path])
+
+
+@contextlib.contextmanager
+def cd(root: pathlib.Path):
+    dir = os.getcwd()
+    os.chdir(root)
+    try:
+        yield
+    finally:
+        os.chdir(dir)
+
+
+def fzf_open(query: str, reload_cmd: str, preview_cmd: str) -> None:
+    # fmt: off
+    fzf_cmd = [
+        "fzf", "--disabled", "--ansi", "--multi",
+        "--bind", f"start:{reload_cmd}",
+        "--bind", f"change:{reload_cmd}",
+        "--bind", "enter:become:if [[ $FZF_SELECT_COUNT -eq 0 ]]; then vim {1} +{2}; else vim +cw -q {+f}; fi",
+        "--delimiter", ":",
+        "--preview", preview_cmd,
+        "--preview-window", "~4,+{2}+4/3,<80(up)",
+        "--query", query,
+    ]
+    # fmt: on
+
+    try:
+        subprocess.run(fzf_cmd, check=True)
+    except subprocess.CalledProcessError:
+        error("Something went wrong with FZF!")
+
+
+def fzf_select(query: str, reload_cmd: str, preview_cmd: str) -> list[pathlib.Path]:
+    # fmt: off
+    fzf_cmd = [
+        "fzf", "--disabled", "--ansi", "--multi",
+        "--bind", f"start:{reload_cmd}",
+        "--bind", f"change:{reload_cmd}",
+        "--preview", preview_cmd,
+        "--preview-window", "~4,+{2}+4/3,<80(up)",
+        "--query", query,
+    ]
+    # fmt: on
+
+    try:
+        result = subprocess.check_output(fzf_cmd)
+    except subprocess.CalledProcessError:
+        error("Something went wrong with FZF!")
+
+    return [pathlib.Path(f) for f in result.decode("utf-8").strip().split()]
+
+
+# Input parsing ============================================================
+def init() -> tuple[pathlib.Path, str, list[str]]:
+    _check_dependencies()
+    root = _get_root()
+    cmd, args = _parse_cmd_and_args()
+    return root, cmd, args
+
+
+def _get_root() -> pathlib.Path:
+    root = os.environ.get(ROOT_ENV_VAR)
+    if not root:
+        error("Root not set!")
+
+    root_path = pathlib.Path(root)
+    if not root_path.exists():
+        error("Root does not exist!")
+
+    if not root_path.is_dir():
+        error("Root is not a directory!")
+
+    return root_path
+
+
+def _parse_cmd_and_args() -> tuple[str, list[str]]:
+    args = sys.argv[1:]
+    if len(args) == 0:
+        error("No arguments provided")
+
+    return args[0], args[1:]
+
+
+def _check_dependencies() -> None:
+    for dep in DEPENDENCIES:
+        if shutil.which(dep) is None:
+            error(f"Dependency {dep} not found!")
+
+
+# Main =====================================================================
+if __name__ == "__main__":
+    root, cmd, args = init()
+    if cmd not in COMMAND_MAP:
+        error(f"Command {cmd} not found!")
+
+    fn, _ = COMMAND_MAP[cmd]
+    fn(root=root, args=args)
