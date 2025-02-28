@@ -19,8 +19,6 @@ DEPENDENCIES = (
     "fzf",  # Fuzzy finder
     "bat",  # Preview files
     "nvim",  # Editor
-    "monolith",  # Save web pages
-    "html2markdown",  # Convert HTML to Markdown
 )
 GREEN = "\033[32m"
 RED = "\033[31m"
@@ -65,7 +63,7 @@ def grep_cmd(root: pathlib.Path, args: list[str]) -> None:
         )
 
 
-def find_cmd(root: pathlib.Path, args: list[str]) -> None:
+def open_cmd(root: pathlib.Path, args: list[str]) -> None:
     query = args[0] if args else ""
     with cd(root):
         fzf_open(
@@ -78,27 +76,8 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
 def list_cmd(root: pathlib.Path, args: list[str]) -> None:
     files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
     for file in files:
-        if file.is_file() and not file.name.startswith(".") and file.suffix:
+        if file.is_file() and file.suffix == ".md":
             print(file.name)
-
-
-def fetch_cmd(root: pathlib.Path, args: list[str]) -> None:
-    if len(args) < 1:
-        error("No URL provided!")
-    elif len(args) < 2:
-        error("No name provided!")
-    url, name = args[0], args[1]
-    tags = args[2:] if len(args) > 2 else []
-
-    monolith_result = subprocess.Popen(
-        ["monolith", url, "-sci"], stdout=subprocess.PIPE
-    )
-    output = subprocess.check_output(["html2markdown"], stdin=monolith_result.stdout)
-
-    init_file(
-        path=root / f"{name}.md", tags=tags, url=url, content=output.decode("utf-8")
-    )
-    print(f"{BLUE}[FETCHED]{RESET} {url} -> {name}.md")
 
 
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:
@@ -111,9 +90,8 @@ COMMAND_MAP = {
     "daily": (daily_cmd, "Add a new daily note"),
     "delete": (delete_cmd, "Delete note(s)"),
     "grep": (grep_cmd, "Search notes by content"),
-    "find": (find_cmd, "Search notes by name"),
+    "open": (open_cmd, "Open notes by name"),
     "list": (list_cmd, "List files (in reverse chronological order)"),
-    "fetch": (fetch_cmd, "Save a web page as a note"),
     "help": (help_cmd, "Print this help message"),
 }
 
@@ -131,13 +109,21 @@ def open_note(path: pathlib.Path, tags: list[str], content: str = "") -> None:
     subprocess.run(["nvim", path])
 
 
-def init_file(path: pathlib.Path, tags: list[str], content: str, url: str = "") -> None:
-    frontmatter = f"""---
-title: {path.stem}
-created_at: {dt.datetime.now().strftime("%Y-%m-%d %H:%M")} 
-tags: {", ".join(tags)}
-{f"url: {url}" if url else ""}---"""
+class YAMLFrontmatter:
+    def __init__(self, title: str, tags: list[str]) -> None:
+        self.title = title
+        self.tags = tags
+        self.created_at = dt.datetime.now()
 
+    def __str__(self) -> str:
+        return f"""---
+title: {self.title}
+created_at: {self.created_at.strftime("%Y-%m-%d %H:%M")}
+tags: {", ".join(self.tags)}---"""
+
+
+def init_file(path: pathlib.Path, tags: list[str], content: str) -> None:
+    frontmatter = YAMLFrontmatter(title=path.stem, tags=tags)
     path.touch()
     path.write_text(f"{frontmatter}\n\n\n{content}")
 
