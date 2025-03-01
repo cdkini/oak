@@ -25,18 +25,20 @@ GREEN = "\033[32m"
 RED = "\033[31m"
 BLUE = "\033[34m"
 RESET = "\033[0m"  # Resets color to default
+TMP_NOTE_NAME = f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+DAILY_NOTE_NAME = dt.datetime.now().strftime("%Y-%m-%d")
 
 
 # Commands =================================================================
 def add_cmd(root: pathlib.Path, args: list[str]) -> None:
-    name = args[0] if args else f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+    name = args[0] if args else TMP_NOTE
     tags = args[1:] if len(args) > 1 else []
     file_path = root / f"{name}.md"
     open_note(file_path, tags=tags)
 
 
 def daily_cmd(root: pathlib.Path, args: list[str]) -> None:
-    today = dt.datetime.now().strftime("%Y-%m-%d")
+    today = DAILY_NOTE_NAME
     file_path = root / f"{today}.md"
     open_note(file_path, tags=["daily"])
 
