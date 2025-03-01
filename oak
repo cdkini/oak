@@ -78,11 +78,13 @@ def open_cmd(root: pathlib.Path, args: list[str]) -> None:
 
 def list_cmd(root: pathlib.Path, args: list[str]) -> None:
     files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
-    print(f"{BLUE}{'Name':30} {'Created At':20}  Tags{RESET}")
+    print(f"{BLUE}{'Name':30} {'Created At':20}Tags{RESET}")
     for file in files:
         if file.is_file() and file.suffix == ".md":
             frontmatter = YAMLFrontmatter.parse(file)
-            print(f"{file.name:30} {frontmatter.created_at}   {frontmatter.tags}")
+            print(
+                f"{file.stem:30} {frontmatter.created_at:%D %H:%m}      {frontmatter.tags}"
+            )
 
 
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:

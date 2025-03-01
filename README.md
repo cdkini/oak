@@ -10,10 +10,9 @@ It is written in Python 3.9 but has no dependencies.
 
 ### Installation
 ```bash
-git clone https://github.com/cdkini/oak.git
-cd oak
-chmod +x oak
-sudo cp oak /usr/local/bin # Or wherever you keep your scripts
+curl -s https://raw.githubusercontent.com/cdkini/oak/refs/heads/main/oak > tmp
+chmod +x tmp
+sudo cp tmp /usr/local/bin/oak # Or wherever you keep your scripts
 ```
 
 You must also set your `OAK_ROOT` env var to point to a notes folder.
