@@ -113,6 +113,10 @@ def open_note(path: pathlib.Path, tags: list[str], content: str = "") -> None:
 
 
 class YAMLFrontmatter:
+    _TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
+    _FRONTMATTER_REGEX = re.compile(r"^---\n((?:[a-zA-Z0-9_]+: .+\n)*)---\n")
+    _CONTENT_REGEX = re.compile(r"(\w+):\s*(.+)")
+
     def __init__(
         self, title: str, tags: list[str], created_at: dt.datetime = dt.datetime.now()
     ) -> None:
@@ -123,27 +127,27 @@ class YAMLFrontmatter:
     def __str__(self) -> str:
         return f"""---
 title: {self.title}
-created_at: {self.created_at.strftime("%Y-%m-%d %H:%M")}
+created_at: {self.created_at.strftime(self._TIMESTAMP_FORMAT)}
 tags: {", ".join(self.tags)}
 ---"""
 
     @classmethod
     def parse(cls, file: pathlib.Path) -> YAMLFrontmatter:
         text = file.read_text()
-        match = re.match(r"^---\n((?:[a-zA-Z0-9_]+: .+\n)*)---\n", text, re.DOTALL)
+        match = cls._FRONTMATTER_REGEX.match(text)
         if not match:
             raise ValueError("Invalid YAML frontmatter format")
 
         yaml_content = match.group(1)
         parsed_data = {
             key: value.strip()
-            for key, value in re.findall(r"(\w+):\s*(.+)", yaml_content)
+            for key, value in cls._CONTENT_REGEX.findall(yaml_content)
         }
 
         title = parsed_data.get("title", file.stem)
         tags = [tag for tag in parsed_data.get("tags", "").split(", ") if tag]
         created_at = dt.datetime.strptime(
-            parsed_data.get("created_at", ""), "%Y-%m-%d %H:%M"
+            parsed_data.get("created_at", ""), cls._TIMESTAMP_FORMAT
         )
         return cls(title=title, tags=tags, created_at=created_at)
 
