@@ -82,9 +82,7 @@ def list_cmd(root: pathlib.Path, args: list[str]) -> None:
     for file in files:
         if file.is_file() and file.suffix == ".md":
             frontmatter = YAMLFrontmatter.parse(file)
-            print(
-                f"{file.stem:30} {frontmatter.created_at:%D %H:%m}      {frontmatter.tags}"
-            )
+            print(frontmatter)
 
 
 def help_cmd(root: pathlib.Path, args: list[str]) -> None:
@@ -118,17 +116,20 @@ def open_note(path: pathlib.Path, tags: list[str], content: str = "") -> None:
 
 class YAMLFrontmatter:
     _TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
-    _FRONTMATTER_REGEX = re.compile(r"^---\n((?:[a-zA-Z0-9_]+: .+\n)*)---\n")
+    _FRONTMATTER_REGEX = re.compile(r"^---\n((?:[a-zA-Z0-9_]+: *(.+)\n)*)---\n")
     _CONTENT_REGEX = re.compile(r"(\w+):\s*(.+)")
 
     def __init__(
         self, title: str, tags: list[str], created_at: dt.datetime = dt.datetime.now()
     ) -> None:
         self.title = title
-        self.tags = tags
+        self.tags = sorted(tags)
         self.created_at = created_at
 
     def __str__(self) -> str:
+        return f"{self.title:30} {self.created_at:%D %H:%m}      {', '.join(t for t in self.tags)}"
+
+    def render(self) -> str:
         return f"""---
 title: {self.title}
 created_at: {self.created_at.strftime(self._TIMESTAMP_FORMAT)}
@@ -159,7 +160,7 @@ tags: {", ".join(self.tags)}
 def init_file(path: pathlib.Path, tags: list[str], content: str) -> None:
     frontmatter = YAMLFrontmatter(title=path.stem, tags=tags)
     path.touch()
-    path.write_text(f"{frontmatter}\n\n\n{content}")
+    path.write_text(f"{frontmatter.render()}\n\n\n{content}")
 
 
 @contextlib.contextmanager
