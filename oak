@@ -50,7 +50,7 @@ def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
     with cd(root):
         files = fzf_select(
             query=query,
-            reload_cmd="reload:fd -e md --hidden --follow --exclude .git {q}",
+            reload_cmd="reload:fd -e md --follow --exclude .git --exclude .deleted {q}",
             preview_cmd="bat {} --style=full --color=always",
         )
 
@@ -78,7 +78,7 @@ def open_cmd(root: pathlib.Path, args: list[str]) -> None:
     with cd(root):
         fzf_open(
             query=query,
-            reload_cmd="reload:fd -e md --hidden --follow --exclude .git {q}",
+            reload_cmd="reload:fd -e md --follow --exclude .git --exclude .deleted {q}",
             preview_cmd="bat {} --style=full --color=always",
         )
 
