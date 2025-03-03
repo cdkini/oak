@@ -17,7 +17,7 @@ ROOT_ENV_VAR = "OAK_ROOT"
 EDITOR = "nvim"
 DEPENDENCIES = (
     "fd",  # Find files
-    "rg",  # Search filesc
+    "rg",  # Search files
     "fzf",  # Fuzzy finder
     "bat",  # Preview files
     EDITOR,
