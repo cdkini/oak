@@ -28,6 +28,7 @@ BLUE = "\033[34m"
 RESET = "\033[0m"  # Resets color to default
 TMP_NOTE_NAME = f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
 DAILY_NOTE_NAME = dt.datetime.now().strftime("%Y-%m-%d")
+DELETED = ".deleted"
 
 
 # Commands =================================================================
@@ -52,8 +53,13 @@ def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
             reload_cmd="reload:fd -e md --hidden --follow --exclude .git {q}",
             preview_cmd="bat {} --style=full --color=always",
         )
+
+        deleted_dir = root / DELETED
+        if not deleted_dir.exists():
+            deleted_dir.mkdir()
+
         for file in files:
-            file.unlink()
+            file.rename(deleted_dir / file.name)
             print(f"{BLUE}[DELETED]{RESET} {file.name}")
 
 
@@ -236,6 +242,9 @@ def _get_root() -> pathlib.Path:
 
     if not root_path.is_dir():
         error(f"Root '{root_path}' is not a directory!")
+
+    if not root_path.joinpath(".dropbox").exists():
+        error(f"Root '{root_path}' is not a Dropbox directory!")
 
     return root_path
 
