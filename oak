@@ -73,7 +73,7 @@ def grep_cmd(root: pathlib.Path, args: list[str]) -> None:
         )
 
 
-def open_cmd(root: pathlib.Path, args: list[str]) -> None:
+def find_cmd(root: pathlib.Path, args: list[str]) -> None:
     query = args[0] if args else ""
     with cd(root):
         fzf_open(
@@ -101,8 +101,8 @@ COMMAND_MAP = {
     "add": (add_cmd, "Add a new note"),
     "daily": (daily_cmd, "Add a new daily note"),
     "delete": (delete_cmd, "Delete note(s)"),
+    "find": (find_cmd, "Search notes by name"),
     "grep": (grep_cmd, "Search notes by content"),
-    "open": (open_cmd, "Open notes by name"),
     "list": (list_cmd, "List files (in reverse chronological order)"),
     "help": (help_cmd, "Print this help message"),
 }
