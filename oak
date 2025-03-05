@@ -45,7 +45,7 @@ def daily_cmd(root: pathlib.Path, args: list[str]) -> None:
     open_note(file_path, tags=["daily"])
 
 
-def delete_cmd(root: pathlib.Path, args: list[str]) -> None:
+def rm_cmd(root: pathlib.Path, args: list[str]) -> None:
     query = args[0] if args else ""
     with cd(root):
         files = fzf_select(
@@ -83,9 +83,9 @@ def find_cmd(root: pathlib.Path, args: list[str]) -> None:
         )
 
 
-def list_cmd(root: pathlib.Path, args: list[str]) -> None:
+def ls_cmd(root: pathlib.Path, args: list[str]) -> None:
     files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
-    print(f"{BLUE}{'Name':30} {'Created At':20}Tags{RESET}")
+    print(f"{BLUE}{'Name':30}{'Updated At':18}{'Created At':18}Tags{RESET}")
     for file in files:
         if file.is_file() and file.suffix == ".md":
             frontmatter = YAMLFrontmatter.parse(file)
@@ -100,10 +100,10 @@ def help_cmd(root: pathlib.Path, args: list[str]) -> None:
 COMMAND_MAP = {
     "add": (add_cmd, "Add a new note"),
     "daily": (daily_cmd, "Add a new daily note"),
-    "delete": (delete_cmd, "Delete note(s)"),
     "find": (find_cmd, "Search notes by name"),
     "grep": (grep_cmd, "Search notes by content"),
-    "list": (list_cmd, "List files (in reverse chronological order)"),
+    "ls": (ls_cmd, "List files (in reverse chronological order)"),
+    "rm": (rm_cmd, "Delete note(s)"),
     "help": (help_cmd, "Print this help message"),
 }
 
@@ -131,13 +131,15 @@ class YAMLFrontmatter:
         title: str,
         tags: list[str],
         created_at: dt.datetime = dt.datetime.now(),
+        updated_at: dt.datetime | None = None,
     ) -> None:
         self.title = title
         self.tags = sorted(tags)
         self.created_at = created_at
+        self.updated_at = updated_at or created_at
 
     def __str__(self) -> str:
-        return f"{self.title:30} {self.created_at:%D %H:%m}      {', '.join(t for t in self.tags)}"
+        return f"{self.title:30}{self.updated_at:%D %H:%m}    {self.created_at:%D %H:%m}    {', '.join(t for t in self.tags)}"
 
     def render(self) -> str:
         return f"""---
@@ -164,7 +166,8 @@ tags: {", ".join(self.tags)}
         created_at = dt.datetime.strptime(
             parsed_data.get("created_at", ""), cls._TIMESTAMP_FORMAT
         )
-        return cls(title=title, tags=tags, created_at=created_at)
+        updated_at = dt.datetime.fromtimestamp(file.stat().st_mtime)
+        return cls(title=title, tags=tags, created_at=created_at, updated_at=updated_at)
 
 
 def init_file(path: pathlib.Path, tags: list[str], content: str) -> None:
