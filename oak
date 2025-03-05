@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 from typing import Generator
 import re
 import contextlib
@@ -14,7 +15,7 @@ import sys
 
 # Constants ================================================================
 ROOT_ENV_VAR = "OAK_ROOT"
-EDITOR = "nvim"
+EDITOR = "vim"
 DEPENDENCIES = (
     "fd",  # Find files
     "rg",  # Search files
@@ -26,27 +27,23 @@ GREEN = "\033[32m"
 RED = "\033[31m"
 BLUE = "\033[34m"
 RESET = "\033[0m"  # Resets color to default
-TMP_NOTE_NAME = f"tmp-{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
 DAILY_NOTE_NAME = dt.datetime.now().strftime("%Y-%m-%d")
 DELETED = ".deleted"
 
 
 # Commands =================================================================
-def add_cmd(root: pathlib.Path, args: list[str]) -> None:
-    name = args[0] if args else TMP_NOTE_NAME
-    tags = args[1:] if len(args) > 1 else []
+def add_cmd(root: pathlib.Path, name: str, tags: list[str]) -> None:
     file_path = root / f"{name}.md"
     open_note(file_path, tags=tags)
 
 
-def daily_cmd(root: pathlib.Path, args: list[str]) -> None:
+def daily_cmd(root: pathlib.Path) -> None:
     today = DAILY_NOTE_NAME
     file_path = root / f"{today}.md"
     open_note(file_path, tags=["daily"])
 
 
-def rm_cmd(root: pathlib.Path, args: list[str]) -> None:
-    query = args[0] if args else ""
+def rm_cmd(root: pathlib.Path, query: str = "") -> None:
     with cd(root):
         files = fzf_select(
             query=query,
@@ -63,27 +60,31 @@ def rm_cmd(root: pathlib.Path, args: list[str]) -> None:
             print(f"{BLUE}[DELETED]{RESET} {file.name}")
 
 
-def grep_cmd(root: pathlib.Path, args: list[str]) -> None:
-    query = args[0] if args else ""
+def grep_cmd(root: pathlib.Path, query: str = "", no_fzf: bool = False) -> None:
     with cd(root):
-        fzf_open(
-            query=query,
-            reload_cmd="reload:rg --column --color=always --smart-case {q} || :",
-            preview_cmd="bat --style=full --color=always --highlight-line {2} {1}",
-        )
+        if no_fzf:
+            rg(query=query)
+        else:
+            fzf_open(
+                query=query,
+                reload_cmd="reload:rg --column --color=always --smart-case {q} || :",
+                preview_cmd="bat --style=full --color=always --highlight-line {2} {1}",
+            )
 
 
-def find_cmd(root: pathlib.Path, args: list[str]) -> None:
-    query = args[0] if args else ""
+def find_cmd(root: pathlib.Path, query: str = "", no_fzf: bool = False) -> None:
     with cd(root):
-        fzf_open(
-            query=query,
-            reload_cmd="reload:fd -e md --follow --exclude .git --exclude .deleted {q}",
-            preview_cmd="bat {} --style=full --color=always",
-        )
+        if no_fzf:
+            fd(query=query)
+        else:
+            fzf_open(
+                query=query,
+                reload_cmd="reload:fd -e md --follow --exclude .git --exclude .deleted {q}",
+                preview_cmd="bat {} --style=full --color=always",
+            )
 
 
-def ls_cmd(root: pathlib.Path, args: list[str]) -> None:
+def ls_cmd(root: pathlib.Path) -> None:
     files = sorted(root.iterdir(), key=lambda f: f.stat().st_mtime, reverse=True)
     print(f"{BLUE}{'Name':30}{'Updated At':18}{'Created At':18}Tags{RESET}")
     for file in files:
@@ -92,20 +93,18 @@ def ls_cmd(root: pathlib.Path, args: list[str]) -> None:
             print(frontmatter)
 
 
-def help_cmd(root: pathlib.Path, args: list[str]) -> None:
-    for cmd, (_, description) in COMMAND_MAP.items():
+def help_cmd() -> None:
+    command_map = {
+        "add": "Add a new note",
+        "daily": "Add a new daily note",
+        "find": "Search notes by name",
+        "grep": "Search notes by content",
+        "ls": "List files (in reverse chronological order",
+        "rm": "Delete note(s)",
+        "help": "Print this help message",
+    }
+    for cmd, description in command_map.items():
         print(f"{GREEN}{cmd:10}{RESET} {description}")
-
-
-COMMAND_MAP = {
-    "add": (add_cmd, "Add a new note"),
-    "daily": (daily_cmd, "Add a new daily note"),
-    "find": (find_cmd, "Search notes by name"),
-    "grep": (grep_cmd, "Search notes by content"),
-    "ls": (ls_cmd, "List files (in reverse chronological order)"),
-    "rm": (rm_cmd, "Delete note(s)"),
-    "help": (help_cmd, "Print this help message"),
-}
 
 
 # Utils ====================================================================
@@ -226,12 +225,20 @@ def fzf_select(query: str, reload_cmd: str, preview_cmd: str) -> list[pathlib.Pa
     return [pathlib.Path(f) for f in result.decode("utf-8").strip().splitlines()]
 
 
+def rg(query: str) -> None:
+    subprocess.run(["rg", "--column", "--color=always", "--smart-case", query])
+
+
+def fd(query: str) -> None:
+    subprocess.run(["fd", "-e", "md", "--follow", "--exclude", ".git", query])
+
+
 # Input parsing ============================================================
-def init() -> tuple[pathlib.Path, str, list[str]]:
+def init() -> tuple[pathlib.Path, argparse.Namespace]:
     _check_dependencies()
     root = _get_root()
-    cmd, args = _parse_cmd_and_args()
-    return root, cmd, args
+    parsed = _parse_cmd_and_args()
+    return root, parsed
 
 
 def _get_root() -> pathlib.Path:
@@ -252,12 +259,19 @@ def _get_root() -> pathlib.Path:
     return root_path
 
 
-def _parse_cmd_and_args() -> tuple[str, list[str]]:
-    args = sys.argv[1:]
-    if len(args) == 0:
-        return "help", []
+def _parse_cmd_and_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cmd", type=str, help="Command to run", default="help")
+    parser.add_argument("-t", "--tags", nargs="+", type=str, help="Tags for the note")
+    parser.add_argument("-N", "--no-fzf", action="store_true", help="Disable FZF")
+    parser.add_argument("args", nargs="*", type=str, help="Arguments for the command")
 
-    return args[0], args[1:]
+    namespace, unrecognized = parser.parse_known_args()
+    for val in unrecognized:
+        if val not in namespace.args:
+            namespace.args.append(val)
+
+    return namespace
 
 
 def _check_dependencies() -> None:
@@ -268,11 +282,25 @@ def _check_dependencies() -> None:
 
 # Main =====================================================================
 if __name__ == "__main__":
-    root, cmd, args = init()
-    if cmd not in COMMAND_MAP:
+    root, parsed = init()
+    cmd = parsed.cmd
+    args = parsed.args
+
+    if cmd == "add":
+        add_cmd(root=root, name=args[0], tags=parsed.tags)
+    elif cmd == "daily":
+        daily_cmd(root=root)
+    elif cmd == "find":
+        find_cmd(root=root, query=args[0] if args else "", no_fzf=parsed.no_fzf)
+    elif cmd == "grep":
+        grep_cmd(root=root, query=args[0] if args else "", no_fzf=parsed.no_fzf)
+    elif cmd == "ls":
+        ls_cmd(root=root)
+    elif cmd == "rm":
+        rm_cmd(root=root, query=args[0] if args else "")
+    elif cmd == "help":
+        help_cmd()
+    else:
         error(
             f"Command {cmd} not found! Use `{BLUE}oak help{RESET}` to see available commands."
         )
-
-    fn, _ = COMMAND_MAP[cmd]
-    fn(root=root, args=args)
