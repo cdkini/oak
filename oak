@@ -60,22 +60,24 @@ def rm_cmd(root: pathlib.Path, query: str = "") -> None:
             print(f"{BLUE}[DELETED]{RESET} {file.name}")
 
 
-def grep_cmd(root: pathlib.Path, query: str = "", no_fzf: bool = False) -> None:
+def grep_cmd(root: pathlib.Path, query: str = "") -> None:
     with cd(root):
-        if no_fzf:
-            rg(query=query)
-        else:
+        rg(query=query)
+
+
+def find_cmd(root: pathlib.Path, query: str = "") -> None:
+    with cd(root):
+        fd(query=query)
+
+
+def open_cmd(root: pathlib.Path, query: str = "", grep: bool = False):
+    with cd(root):
+        if grep:
             fzf_open(
                 query=query,
                 reload_cmd="reload:rg --column --color=always --smart-case {q} || :",
                 preview_cmd="bat --style=full --color=always --highlight-line {2} {1}",
             )
-
-
-def find_cmd(root: pathlib.Path, query: str = "", no_fzf: bool = False) -> None:
-    with cd(root):
-        if no_fzf:
-            fd(query=query)
         else:
             fzf_open(
                 query=query,
@@ -99,7 +101,8 @@ def help_cmd() -> None:
         "daily": "Add a new daily note",
         "find": "Search notes by name",
         "grep": "Search notes by content",
-        "ls": "List files (in reverse chronological order",
+        "ls": "List files (in reverse chronological order)",
+        "open": "Open note(s)",
         "rm": "Delete note(s)",
         "help": "Print this help message",
     }
@@ -263,7 +266,7 @@ def _parse_cmd_and_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("cmd", type=str, help="Command to run", default="help")
     parser.add_argument("-t", "--tags", nargs="+", type=str, help="Tags for the note")
-    parser.add_argument("-N", "--no-fzf", action="store_true", help="Disable FZF")
+    parser.add_argument("-g", "--grep", action="store_true", help="Enable grep search")
     parser.add_argument("args", nargs="*", type=str, help="Arguments for the command")
 
     namespace, unrecognized = parser.parse_known_args()
@@ -291,11 +294,13 @@ if __name__ == "__main__":
     elif cmd == "daily":
         daily_cmd(root=root)
     elif cmd == "find":
-        find_cmd(root=root, query=args[0] if args else "", no_fzf=parsed.no_fzf)
+        find_cmd(root=root, query=args[0] if args else "")
     elif cmd == "grep":
-        grep_cmd(root=root, query=args[0] if args else "", no_fzf=parsed.no_fzf)
+        grep_cmd(root=root, query=args[0] if args else "")
     elif cmd == "ls":
         ls_cmd(root=root)
+    elif cmd == "open":
+        open_cmd(root=root, query=args[0] if args else "", grep=parsed.grep)
     elif cmd == "rm":
         rm_cmd(root=root, query=args[0] if args else "")
     elif cmd == "help":
