@@ -15,7 +15,7 @@ import sys
 
 # Constants ================================================================
 ROOT_ENV_VAR = "OAK_ROOT"
-EDITOR = "vim"
+EDITOR = "nvim"
 DEPENDENCIES = (
     "fd",  # Find files
     "rg",  # Search files
