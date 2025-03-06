@@ -194,7 +194,7 @@ def fzf_open(query: str, reload_cmd: str, preview_cmd: str) -> None:
         "fzf", "--disabled", "--ansi", "--multi",
         "--bind", f"start:{reload_cmd}",
         "--bind", f"change:{reload_cmd}",
-        "--bind", "enter:become:if [[ $FZF_SELECT_COUNT -eq 0 ]]; then vim {1} +{2}; else vim +cw -q {+f}; fi",
+        "--bind", "enter:become:if [[ $FZF_SELECT_COUNT -eq 0 ]]; then nvim {1} +{2}; else nvim +cw -q {+f}; fi",
         "--delimiter", ":",
         "--preview", preview_cmd,
         "--preview-window", "~4,+{2}+4/3,<80(up)",
