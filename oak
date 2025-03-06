@@ -290,7 +290,7 @@ if __name__ == "__main__":
     args = parsed.args
 
     if cmd == "add":
-        add_cmd(root=root, name=args[0], tags=parsed.tags)
+        add_cmd(root=root, name=args[0], tags=parsed.tags or [])
     elif cmd == "daily":
         daily_cmd(root=root)
     elif cmd == "find":
