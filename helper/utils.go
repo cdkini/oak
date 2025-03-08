@@ -18,6 +18,7 @@ func OpenNote(f string, tags []string) {
 }
 
 func initFile(f string, tags []string) string {
+
 	return f
 }
 
@@ -25,11 +26,25 @@ func FzfOpen(query, reloadCmd, previewCmd string) {}
 
 func FzfSelect(query, reloadCmd, previewCmd string) {}
 
-func Rg(query string) {}
+func Rg(query string) {
+	cmd := exec.Command("rg", "--color=always", "--line-number", "--no-heading", "--smart-case", query)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		Error("Something went wrong when executing command '%s'\n", query)
+	}
+}
 
-func Fd(query string) {}
+func Fd(query string) {
+	cmd := exec.Command("fd", "--color=always", "--type=f", "--hidden", "--exclude=.git", query)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		Error("Something went wrong when executing command '%s'\n", query)
+	}
+}
 
-func InitProj() string {
+func GetOakRoot() string {
 	for _, dep := range OakDependencies {
 		if _, err := exec.LookPath(dep); err != nil {
 			Error("Could not find dependency '%s'\n", dep)

@@ -6,7 +6,6 @@ package cmd
 import (
 	"os"
 
-	"github.com/cdkini/oak/v2/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +17,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -29,7 +27,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	helper.InitProj()
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.v2.yaml)")
 
 	// Cobra also supports local flags, which will only run

@@ -1,13 +1,13 @@
 package helper
 
 const (
-	OakRootEnvVar = "OAK_ROOT"
+	FZF           = "fzf"
+	FindTool      = "fd"
+	GrepTool      = "rg"
+	PreviewTool   = "bat"
 	OakEditor     = "nvim"
-	// Green         = "\033[32m"
-	// Red           = "\033[31m"
-	// Blue          = "\033[34m"
-	// Reset         = "\033[0m"
-	DeletedDir = ".deleted"
+	OakRootEnvVar = "OAK_ROOT"
+	DeletedDir    = ".deleted"
 )
 
-var OakDependencies = [...]string{"fd", "rg", "fzf", "bat", OakEditor}
+var OakDependencies = [...]string{FZF, FindTool, GrepTool, PreviewTool, OakEditor}
