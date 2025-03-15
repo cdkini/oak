@@ -6,9 +6,10 @@ import (
 	"os/exec"
 )
 
-func OpenNote(f string, tags []string) {
+func OpenNote(root string, title string, tags []string) {
+	f := initFile(root, title, tags)
 
-	cmd := exec.Command(OakEditor, initFile(f, tags))
+	cmd := exec.Command(OakEditor, f)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 
@@ -17,9 +18,22 @@ func OpenNote(f string, tags []string) {
 	}
 }
 
-func initFile(f string, tags []string) string {
+func initFile(root string, title string, tags []string) string {
+	path := fmt.Sprintf("%s/%s.md", root, title)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		f, err := os.Create(path)
+		if err != nil {
+			Error("Something went wrong when creating file '%s'\n", path)
+		}
+		defer f.Close()
 
-	return f
+		frontmatter := NewFrontmatter(title, tags)
+		if _, err := f.WriteString(frontmatter.Render()); err != nil {
+			Error("Something went wrong when writing to file '%s'\n", path)
+		}
+	}
+
+	return path
 }
 
 func FzfOpen(query, reloadCmd, previewCmd string) {}
@@ -42,6 +56,7 @@ func Fd(query string) {
 	if err := cmd.Run(); err != nil {
 		Error("Something went wrong when executing command '%s'\n", query)
 	}
+
 }
 
 func GetOakRoot() string {
