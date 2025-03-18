@@ -11,16 +11,16 @@ const (
 	editor     = "nvim"
 )
 
-func GetOakRoot() string {
+func GetOakRoot() (string, error) {
 	root := os.Getenv(oakRootEnv)
 	if root == "" {
-		os.Exit(1)
+		return "", errors.New("Please set the OAK_ROOT environment variable!")
 	}
 	if stat, err := os.Stat(root); err != nil || !stat.IsDir() {
-		os.Exit(1)
+		return "", errors.New("OAK_ROOT must be a valid directory!")
 	}
 
-	return root
+	return root, nil
 }
 
 func OpenNote(path string, title string, tags []string) error {
@@ -30,10 +30,7 @@ func OpenNote(path string, title string, tags []string) error {
 		}
 	}
 
-	cmd := exec.Command(editor, path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	return cmd.Run()
+	return openNote(path)
 }
 
 func initNote(path string, title string, tags []string) error {
@@ -46,4 +43,11 @@ func initNote(path string, title string, tags []string) error {
 	fileMetadata := NewFileMetadata(title, tags)
 	_, err = f.WriteString(fileMetadata.Render())
 	return err
+}
+
+func openNote(path string) error {
+	cmd := exec.Command(editor, path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
