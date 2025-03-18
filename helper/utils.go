@@ -43,7 +43,7 @@ func initNote(path string, title string, tags []string) error {
 	}
 	defer f.Close()
 
-	frontmatter := NewFrontmatter(title, tags)
-	_, err = f.WriteString(frontmatter.Render())
+	fileMetadata := NewFileMetadata(title, tags)
+	_, err = f.WriteString(fileMetadata.Render())
 	return err
 }
