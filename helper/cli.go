@@ -8,7 +8,18 @@ import (
 
 const (
 	editor = "nvim"
+	grep   = "rg"
+	find   = "fd"
 )
+
+func CheckDependencies() error {
+	for _, cmd := range []string{editor, grep, find} {
+		if _, err := exec.LookPath(cmd); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func OpenNote(path string, title string, tags []string) error {
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
@@ -34,6 +45,22 @@ func initNote(path string, title string, tags []string) error {
 
 func openNote(path string) error {
 	cmd := exec.Command(editor, path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
+}
+
+func Grep(root string, query string) error {
+	cmd := exec.Command(grep, query)
+	cmd.Dir = root
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
+}
+
+func Find(root string, query string) error {
+	cmd := exec.Command(find, query)
+	cmd.Dir = root
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	return cmd.Run()

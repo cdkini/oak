@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cdkini/oak/v2/helper"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,10 @@ var rootCmd = &cobra.Command{
 	Use:   "oak",
 	Short: "A simple command line note taking app for developers",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := helper.CheckDependencies(); err != nil {
+			return err
+		}
+
 		oakRoot, err := getOakRoot()
 		if err != nil {
 			return err
