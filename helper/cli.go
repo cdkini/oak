@@ -6,6 +6,7 @@ import (
 	"os/exec"
 )
 
+// TODO - Make these configurable
 const (
 	editor = "nvim"
 	grep   = "rg"
@@ -28,7 +29,7 @@ func OpenNote(path string, title string, tags []string) error {
 		}
 	}
 
-	return openNote(path)
+	return openNoteInEditor(path)
 }
 
 func initNote(path string, title string, tags []string) error {
@@ -43,7 +44,7 @@ func initNote(path string, title string, tags []string) error {
 	return err
 }
 
-func openNote(path string) error {
+func openNoteInEditor(path string) error {
 	cmd := exec.Command(editor, path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

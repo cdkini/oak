@@ -8,7 +8,7 @@ import (
 )
 
 var rmCmd = &cobra.Command{
-	Use:   "rm",
+	Use:   "rm <note(s)>",
 	Short: "Delete note(s)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil // TODO

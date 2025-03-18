@@ -8,7 +8,7 @@ import (
 )
 
 var openCmd = &cobra.Command{
-	Use:   "open",
+	Use:   "open <note(s)>",
 	Short: "Open note(s)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil // TODO

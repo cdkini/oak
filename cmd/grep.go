@@ -9,7 +9,7 @@ import (
 )
 
 var grepCmd = &cobra.Command{
-	Use:   "grep",
+	Use:   "grep <query?>",
 	Short: "Search notes by content",
 	Args:  cobra.MaximumNArgs(1), // TODO: Make this a passthrough for grep/rg flags
 	RunE: func(cmd *cobra.Command, args []string) error {

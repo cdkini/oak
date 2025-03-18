@@ -9,7 +9,7 @@ import (
 )
 
 var findCmd = &cobra.Command{
-	Use:   "find",
+	Use:   "find <query?>",
 	Short: "Find notes by title",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
