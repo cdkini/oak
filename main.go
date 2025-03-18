@@ -1,5 +1,6 @@
 /*
-Copyright © 2025 Chetan Kini ckini123@gmail.com
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+
 */
 package main
 
