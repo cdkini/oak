@@ -7,21 +7,8 @@ import (
 )
 
 const (
-	oakRootEnv = "OAK_ROOT"
-	editor     = "nvim"
+	editor = "nvim"
 )
-
-func GetOakRoot() (string, error) {
-	root := os.Getenv(oakRootEnv)
-	if root == "" {
-		return "", errors.New("Please set the OAK_ROOT environment variable!")
-	}
-	if stat, err := os.Stat(root); err != nil || !stat.IsDir() {
-		return "", errors.New("OAK_ROOT must be a valid directory!")
-	}
-
-	return root, nil
-}
 
 func OpenNote(path string, title string, tags []string) error {
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
