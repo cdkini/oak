@@ -18,7 +18,7 @@ var addCmd = &cobra.Command{
 		title := args[0]
 		tags, _ := cmd.Flags().GetStringSlice("tag")
 
-		oakRoot := helper.GetOakRoot()
+		oakRoot := cmd.Context().Value("root").(string)
 		if err := add(oakRoot, title, tags); err != nil {
 			panic(err)
 		}
