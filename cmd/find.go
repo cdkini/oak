@@ -22,7 +22,7 @@ func init() {
 func find(cmd *cobra.Command, args []string) error {
 	oakRoot := cmd.Context().Value("root").(string)
 
-	var query string
+	query := ""
 	if len(args) == 1 {
 		query = args[0]
 	}

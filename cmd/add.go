@@ -27,8 +27,7 @@ func add(cmd *cobra.Command, args []string) error {
 	tags, _ := cmd.Flags().GetStringSlice("tag")
 
 	oakRoot := cmd.Context().Value("root").(string)
-
 	path := filepath.Join(oakRoot, title+".md")
-	return helper.OpenNote(path, title, tags)
 
+	return helper.OpenNote(path, title, tags)
 }
