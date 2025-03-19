@@ -16,9 +16,7 @@ var findCmd = &cobra.Command{
 		oakRoot := cmd.Context().Value("root").(string)
 
 		var query string
-		if len(args) == 0 {
-			query = ""
-		} else {
+		if len(args) == 1 {
 			query = args[0]
 		}
 

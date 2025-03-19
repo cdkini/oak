@@ -19,6 +19,7 @@ var addCmd = &cobra.Command{
 		tags, _ := cmd.Flags().GetStringSlice("tag")
 
 		oakRoot := cmd.Context().Value("root").(string)
+
 		return add(oakRoot, title, tags)
 	},
 }
@@ -30,5 +31,6 @@ func init() {
 
 func add(root string, title string, tags []string) error {
 	path := filepath.Join(root, title+".md")
+
 	return helper.OpenNote(path, title, tags)
 }

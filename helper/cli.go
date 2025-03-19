@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // TODO - Make these configurable
@@ -58,7 +59,7 @@ func Find(root string, query string) error {
 }
 
 func FZFOpen(root string, query string) error {
-	// TODO - remove hardcoded nvim, rg, and bat
+	// TODO - remove hardcoded deps
 	reloadCmd := "reload:rg --column --color=always --smart-case {q} || :"
 	previewCmd := "bat --style=full --color=always --highlight-line {2} {1}"
 	args := []string{"--disabled", "--ansi", "--multi",
@@ -81,4 +82,30 @@ func runCommand(name string, dir *string, args ...string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
+}
+
+func FZFSelect(root string, query string) ([]string, error) {
+	// TODO - remove hardcoded deps
+	reloadCmd := "reload:fd -e md --follow --exclude .git --exclude .deleted {q}"
+	previewCmd := "bat {} --style=full --color=always"
+	args := []string{
+		"--disabled", "--ansi", "--multi",
+		"--bind", "start:" + reloadCmd,
+		"--bind", "change:" + reloadCmd,
+		"--preview", previewCmd,
+		"--preview-window", "~4,+{2}+4/3,<80(up)",
+		"--query", query,
+	}
+
+	result, err := outputCommand(FZF, &root, args...)
+	files := strings.Split(strings.TrimSpace(string(result)), "\n")
+	return files, err
+}
+
+func outputCommand(name string, dir *string, args ...string) ([]byte, error) {
+	cmd := exec.Command(name, args...)
+	if dir != nil {
+		cmd.Dir = *dir
+	}
+	return cmd.Output()
 }

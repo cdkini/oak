@@ -28,5 +28,6 @@ func init() {
 func daily(root string) error {
 	title := time.Now().Format("2006-01-02")
 	path := filepath.Join(root, title+".md")
+
 	return helper.OpenNote(path, title, []string{"daily"})
 }

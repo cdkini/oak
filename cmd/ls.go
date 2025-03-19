@@ -19,6 +19,7 @@ var lsCmd = &cobra.Command{
 	Short: "List all notes (in reverse chronological update order)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		oakRoot := cmd.Context().Value("root").(string)
+
 		return list(oakRoot)
 	},
 }
