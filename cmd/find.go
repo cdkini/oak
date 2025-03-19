@@ -12,22 +12,20 @@ var findCmd = &cobra.Command{
 	Use:   "find <query?>",
 	Short: "Find notes by title",
 	Args:  cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		oakRoot := cmd.Context().Value("root").(string)
-
-		var query string
-		if len(args) == 1 {
-			query = args[0]
-		}
-
-		return find(oakRoot, query)
-	},
+	RunE:  find,
 }
 
 func init() {
 	rootCmd.AddCommand(findCmd)
 }
 
-func find(root string, query string) error {
-	return helper.Find(root, query)
+func find(cmd *cobra.Command, args []string) error {
+	oakRoot := cmd.Context().Value("root").(string)
+
+	var query string
+	if len(args) == 1 {
+		query = args[0]
+	}
+
+	return helper.Find(oakRoot, query)
 }

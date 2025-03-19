@@ -16,6 +16,18 @@ import (
 
 const oakRootEnv = "OAK_ROOT"
 
+func getOakRoot() (string, error) {
+	root := os.Getenv(oakRootEnv)
+	if root == "" {
+		return "", errors.New("Please set the OAK_ROOT environment variable!")
+	}
+	if stat, err := os.Stat(root); err != nil || !stat.IsDir() {
+		return "", errors.New("OAK_ROOT must be a valid directory!")
+	}
+
+	return root, nil
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "oak",
@@ -50,16 +62,4 @@ func pprintError(err error) {
 	color.New(color.FgRed).Print("[ERROR] ")
 	fmt.Println(err.Error())
 	os.Exit(1)
-}
-
-func getOakRoot() (string, error) {
-	root := os.Getenv(oakRootEnv)
-	if root == "" {
-		return "", errors.New("Please set the OAK_ROOT environment variable!")
-	}
-	if stat, err := os.Stat(root); err != nil || !stat.IsDir() {
-		return "", errors.New("OAK_ROOT must be a valid directory!")
-	}
-
-	return root, nil
 }

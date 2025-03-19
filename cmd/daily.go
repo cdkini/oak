@@ -15,19 +15,18 @@ var dailyCmd = &cobra.Command{
 	Use:   "daily",
 	Short: "Add a new daily note",
 	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		oakRoot := cmd.Context().Value("root").(string)
-		return daily(oakRoot)
-	},
+	RunE:  daily,
 }
 
 func init() {
 	rootCmd.AddCommand(dailyCmd)
 }
 
-func daily(root string) error {
+func daily(cmd *cobra.Command, args []string) error {
+	oakRoot := cmd.Context().Value("root").(string)
+
 	title := time.Now().Format("2006-01-02")
-	path := filepath.Join(root, title+".md")
+	path := filepath.Join(oakRoot, title+".md")
 
 	return helper.OpenNote(path, title, []string{"daily"})
 }

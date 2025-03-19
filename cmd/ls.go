@@ -17,30 +17,22 @@ import (
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all notes (in reverse chronological update order)",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		oakRoot := cmd.Context().Value("root").(string)
-
-		return list(oakRoot)
-	},
+	RunE:  list,
 }
 
 func init() {
 	rootCmd.AddCommand(lsCmd)
 }
 
-func list(root string) error {
-	metadata, err := collectFileMetadata(root)
+func list(cmd *cobra.Command, args []string) error {
+	oakRoot := cmd.Context().Value("root").(string)
+
+	metadata, err := collectFileMetadata(oakRoot)
 	if err != nil {
 		return err
 	}
 
-	padding := [...]int{35, 20, 20, 5} // Should probably be calculated dynamically
-	format := "%-*s %-*s %-*s %-*s\n"
-
-	color.Blue(format, padding[0], "Title", padding[1], "Updated At", padding[2], "Created At", padding[3], "Tags")
-	for _, m := range metadata {
-		fmt.Printf(format, padding[0], m.Title, padding[1], *m.UpdatedAt, padding[2], m.CreatedAt, padding[3], m.Tags)
-	}
+	printFileMetadata(metadata)
 
 	return nil
 }
@@ -70,4 +62,14 @@ func collectFileMetadata(dir string) ([]*helper.FileMetadata, error) {
 	})
 
 	return metadata, nil
+}
+
+func printFileMetadata(metadata []*helper.FileMetadata) {
+	padding := [...]int{35, 20, 20, 5} // Should probably be calculated dynamically
+	format := "%-*s %-*s %-*s %-*s\n"
+
+	color.Blue(format, padding[0], "Title", padding[1], "Updated At", padding[2], "Created At", padding[3], "Tags")
+	for _, m := range metadata {
+		fmt.Printf(format, padding[0], m.Title, padding[1], *m.UpdatedAt, padding[2], m.CreatedAt, padding[3], m.Tags)
+	}
 }
