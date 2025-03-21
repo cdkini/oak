@@ -2,7 +2,6 @@ package helper
 
 import (
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -17,8 +16,6 @@ type FileMetadata struct {
 	CreatedAt string `yaml:"created_at"`
 	UpdatedAt *string
 }
-
-var frontMatterRegex = regexp.MustCompile(`(?s)^---\n(.*?)\n---\n(.*)`)
 
 func NewFileMetadata(title string, tags []string) *FileMetadata {
 	return &FileMetadata{
@@ -38,6 +35,9 @@ func ParseFileMetadata(path string) (*FileMetadata, error) {
 
 	metadata := &FileMetadata{}
 	_, err = frontmatter.MustParse(f, metadata)
+	if err != nil {
+		return nil, err
+	}
 
 	stat, err := f.Stat()
 	if err != nil {

@@ -23,7 +23,7 @@ func init() {
 }
 
 func daily(cmd *cobra.Command, args []string) error {
-	oakRoot := cmd.Context().Value("root").(string)
+	oakRoot := getOakRootFromCmd(cmd)
 
 	title := time.Now().Format("2006-01-02")
 	path := filepath.Join(oakRoot, title+".md")

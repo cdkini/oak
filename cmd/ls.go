@@ -25,7 +25,7 @@ func init() {
 }
 
 func list(cmd *cobra.Command, args []string) error {
-	oakRoot := cmd.Context().Value("root").(string)
+	oakRoot := getOakRootFromCmd(cmd)
 
 	metadata, err := collectFileMetadata(oakRoot)
 	if err != nil {

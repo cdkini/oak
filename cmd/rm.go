@@ -27,7 +27,7 @@ func init() {
 }
 
 func rm(cmd *cobra.Command, args []string) error {
-	oakRoot := cmd.Context().Value("root").(string)
+	oakRoot := getOakRootFromCmd(cmd)
 
 	query := ""
 	if len(args) == 1 {

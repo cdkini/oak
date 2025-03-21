@@ -14,7 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const oakRootEnv = "OAK_ROOT"
+type key int
+
+const (
+	oakRootEnv     string = "OAK_ROOT"
+	rootContextKey key    = iota
+)
 
 func getOakRoot() (string, error) {
 	root := os.Getenv(oakRootEnv)
@@ -26,6 +31,10 @@ func getOakRoot() (string, error) {
 	}
 
 	return root, nil
+}
+
+func getOakRootFromCmd(cmd *cobra.Command) string {
+	return cmd.Context().Value(rootContextKey).(string)
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -42,7 +51,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		ctx := context.WithValue(cmd.Context(), "root", oakRoot)
+		ctx := context.WithValue(cmd.Context(), rootContextKey, oakRoot)
 		cmd.SetContext(ctx)
 		return nil
 	},
